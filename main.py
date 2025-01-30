@@ -1,7 +1,6 @@
 import json
 import requests
 from geopy import distance
-from pprint import pprint
 import os
 from dotenv import load_dotenv
 import folium
@@ -31,13 +30,12 @@ def get_coffeeshop_distance(coffeeshop):
     return coffeeshop['distance']
 
 
-if __name__ == '__main__':
+def main():
     load_dotenv()
     apikey = os.getenv("APIKEY")
 
     user_location = input('Где вы находитесь? ')
     user_coords = fetch_coordinates(apikey, user_location)
-    print('Ваши координаты', user_coords)
 
     with open("coffee.json", "r", encoding="CP1251") as my_file:
         file_content_json = my_file.read()
@@ -50,23 +48,36 @@ if __name__ == '__main__':
         coffeeshop_coords = coffeeshop['geoData']['coordinates']
         coffeeshop_info = dict()
         coffeeshop_info['title'] = coffeeshop['Name']
-        coffeeshop_info['distance'] = distance.distance(coffeeshop_coords,
-                                                        user_coords).km
+        coffeeshop_info['distance'] = distance.distance(
+            (coffeeshop_coords[1], coffeeshop_coords[0]),
+            (user_coords[1], user_coords[0])).km
         coffeeshop_info['latitude'] = coffeeshop_coords[1]
         coffeeshop_info['longitude'] = coffeeshop_coords[0]
         coffeeshop_list.append(coffeeshop_info)
 
     wished_coffeeshop = sorted(coffeeshop_list,
                                key=get_coffeeshop_distance)[:5]
-    pprint(wished_coffeeshop, sort_dicts=False)
+    for coffeeshop in wished_coffeeshop:
+        print(coffeeshop['title'])
 
     m = folium.Map(location=(user_coords[1], user_coords[0]), zoom_start=12)
+
+    folium.Marker(
+        location=[user_coords[1], user_coords[0]],
+        tooltip="Ваше местоположение",
+        popup='Вы здесь',
+        icon=folium.Icon(icon="info-sign"),
+        ).add_to(m)
 
     for coffeeshop in wished_coffeeshop:
         folium.Marker(
             location=[coffeeshop['latitude'], coffeeshop['longitude']],
-            tooltip="Click me!",
+            tooltip=coffeeshop['title'],
             popup=coffeeshop['title'],
-            icon=folium.Icon(icon="cloud"),
+            icon=folium.Icon(icon='star', color='green'),
         ).add_to(m)
     m.save('index.html')
+
+
+if __name__ == '__main__':
+    main()
