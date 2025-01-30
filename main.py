@@ -57,8 +57,6 @@ def main():
 
     wished_coffeeshop = sorted(coffeeshop_list,
                                key=get_coffeeshop_distance)[:5]
-    for coffeeshop in wished_coffeeshop:
-        print(coffeeshop['title'])
 
     m = folium.Map(location=(user_coords[1], user_coords[0]), zoom_start=12)
 
